@@ -3,8 +3,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import os
 import datetime
+import requests
 
 
+#takes webdriver
+#assumes subreddit is already loaded
+#returns a list of links for comment pages after recursively opening all subreddit pages
 def recursiveCommentLinkScrape(driver):
     #create a list of comment comment Links
     commentLinks = []
@@ -17,13 +21,17 @@ def recursiveCommentLinkScrape(driver):
 
     nextButton = driver.find_elements(By.LINK_TEXT, "next ›")
 
-#    if len(nextButton) > 0:
-#        nextButton[0].click()
-#        return(commentLinks + recursiveCommentLinkScrape(driver))
+    if len(nextButton) > 0:
+        nextButton[0].click()
+        return(commentLinks + recursiveCommentLinkScrape(driver))
 
     return(commentLinks)
 
 
+
+#takes webdriver and comment page commentURL
+#returns a list with image URLs, if there are any
+#otherwise returns an empty list
 def imageLinkScrape(driver, commentURL):
 
     imageLinks = []
@@ -51,11 +59,13 @@ def imageLinkScrape(driver, commentURL):
 #gets subreddit to scrape from user
 subreddit = input("Enter subreddit to scrape: ")
 
-saveDirectory = "ImageScraper/" + subreddit + datetime.datetime.now().strftime("%Y%m%d")
+#the save directory is just the subreddit and date
+saveDirectory = subreddit + datetime.datetime.now().strftime("%Y%m%d")
 
 if not os.path.exists(saveDirectory):
     os.makedirs(saveDirectory)
 
+os.chdir(saveDirectory)
 
 #opens subreddit
 driver = webdriver.Firefox()
@@ -69,22 +79,22 @@ if(driver.title == "reddit.com: over 18?"):
 
 commentLinks = []
 
+#collects all comment pages
 commentLinks.extend(recursiveCommentLinkScrape(driver))
 
 
 imageLinks = []
 
+#opens all comment pages and returns the links for images
 for commentLink in commentLinks:
     imageLinks = imageLinks + imageLinkScrape(driver, commentLink)
 
 
+filename = ""
 
 
 for imageLink in imageLinks:
-    print(imageLink)
-    print("\n")
-
-#elem = driver.find_element(By.NAME, "q")
-#elem.clear()
-#elem.send_keys("pycon")
-#elem.send_keys(Keys.RETURN)
+    filename = imageLink.split("/")[3]
+    localFile = open(filename,'wb')
+    localFile.write(requests.get(imageLink).content)
+    localFile.close()
