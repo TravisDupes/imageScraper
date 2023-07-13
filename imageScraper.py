@@ -23,6 +23,7 @@ def recursiveCommentLinkScrape(driver):
 
     return(commentLinks)
 
+
 def imageLinkScrape(driver, commentURL):
 
     imageLinks = []
@@ -35,11 +36,10 @@ def imageLinkScrape(driver, commentURL):
             imageLinks.append(postLinkElement.get_attribute("href"))
         return(imageLinks)
 
-
     previewElements = driver.find_elements(By.XPATH,'//img[@class="preview"]')
     if len(previewElements) > 0:
         for previewElement in previewElements:
-            imageLinks.append(previewElement.get_attribute("src"))
+            imageLinks.append(previewElement.get_attribute("src").split("?")[0].replace("preview","i"))
         return(imageLinks)
 
     return(imageLinks)
